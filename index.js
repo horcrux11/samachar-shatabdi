@@ -9,7 +9,7 @@ let newsAccordion = document.getElementById('newsAccordion');
 
 // Create an ajax get request
 const xhr = new XMLHttpRequest();
-xhr.open('GET', 'https://newsapi.org/v2/top-headlines?country=in&apiKey=37be4d64f3bd473d91d1d8edf2fd3d86', true);
+xhr.open('GET', 'https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=37be4d64f3bd473d91d1d8edf2fd3d86', true);
 
 // What to do when response is ready
 xhr.onload = function () {
