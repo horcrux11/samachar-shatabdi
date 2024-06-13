@@ -1,45 +1,69 @@
-console.log("This is my index js file");
+const API_KEY = "37be4d64f3bd473d91d1d8edf2fd3d86";
+const url = "https://newsapi.org/v2/everything?q=";
 
-// Initialize the news api parameters
-let source = 'the-times-of-india';
-let apiKey = '37be4d64f3bd473d91d1d8edf2fd3d86'
+window.addEventListener("load", () => fetchNews("India"));
 
-// Grab the news container
-let newsAccordion = document.getElementById('newsAccordion');
-
-// Create an ajax get request
-const xhr = new XMLHttpRequest();
-xhr.open('GET', 'https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=37be4d64f3bd473d91d1d8edf2fd3d86', true);
-
-// What to do when response is ready
-xhr.onload = function () {
-    if (this.status === 200) {
-        let json = JSON.parse(this.responseText);
-        let articles = json.articles;
-        console.log(articles);
-        let newsHtml = "";
-        articles.forEach(function(element, index) {
-            let news = `<div class="card">
-                            <div class="card-header" id="heading${index}">
-                                <h2 class="mb-0">
-                                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapse${index}"
-                                    aria-expanded="false" aria-controls="collapse${index}">
-                                   <b>Breaking News ${index+1}:</b> ${element["title"]}
-                                </button>
-                                </h2>
-                            </div>
-
-                            <div id="collapse${index}" class="collapse" aria-labelledby="heading${index}" data-parent="#newsAccordion">
-                                <div class="card-body"> ${element["content"]}. <a href="${element['url']}" target="_blank" >Read more here</a>  </div>
-                            </div>
-                        </div>`;
-            newsHtml += news;
-        });
-        newsAccordion.innerHTML = newsHtml;
-    }
-    else {
-        console.log("Some error occured")
-    }
+function reload() {
+    window.location.reload();
 }
 
-xhr.send()
+async function fetchNews(query) {
+    const res = await fetch(`${url}${query}&apiKey=${API_KEY}`);
+    const data = await res.json();
+    bindData(data.articles);
+}
+
+function bindData(articles) {
+    const cardsContainer = document.getElementById("cards-container");
+    const newsCardTemplate = document.getElementById("template-news-card");
+
+    cardsContainer.innerHTML = "";
+
+    articles.forEach((article) => {
+        if (!article.urlToImage) return;
+        const cardClone = newsCardTemplate.content.cloneNode(true);
+        fillDataInCard(cardClone, article);
+        cardsContainer.appendChild(cardClone);
+    });
+}
+
+function fillDataInCard(cardClone, article) {
+    const newsImg = cardClone.querySelector("#news-img");
+    const newsTitle = cardClone.querySelector("#news-title");
+    const newsSource = cardClone.querySelector("#news-source");
+    const newsDesc = cardClone.querySelector("#news-desc");
+
+    newsImg.src = article.urlToImage;
+    newsTitle.innerHTML = article.title;
+    newsDesc.innerHTML = article.description;
+
+    const date = new Date(article.publishedAt).toLocaleString("en-US", {
+        timeZone: "Asia/Jakarta",
+    });
+
+    newsSource.innerHTML = `${article.source.name} · ${date}`;
+
+    cardClone.firstElementChild.addEventListener("click", () => {
+        window.open(article.url, "_blank");
+    });
+}
+
+let curSelectedNav = null;
+function onNavItemClick(id) {
+    fetchNews(id);
+    const navItem = document.getElementById(id);
+    curSelectedNav?.classList.remove("active");
+    curSelectedNav = navItem;
+    curSelectedNav.classList.add("active");
+}
+
+const searchButton = document.getElementById("search-button");
+const searchText = document.getElementById("search-text");
+
+searchButton.addEventListener("click", () => {
+    const query = searchText.value;
+    if (!query) return;
+    fetchNews(query);
+    curSelectedNav?.classList.remove("active");
+    curSelectedNav = null;
+});
